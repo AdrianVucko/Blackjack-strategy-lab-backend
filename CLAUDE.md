@@ -22,8 +22,8 @@ Python, FastAPI, NumPy, Pandas, SciPy, Matplotlib, Plotly, SQLite, SQLAlchemy, p
 | Basic strategy | Done | 4-8 deck tables, `decide()` + `build_chart()` — 19 tests |
 | Monte Carlo | Done | round engine + simulator + stats — 14 tests; edge/std validated |
 | Card counting | Done | Hi-Lo/KO/Hi-Opt I, counter, bet ramp, sim — 15 tests; edge curve validated |
-| API layer | Not started | routes for chart + simulation; SQLAlchemy models |
-| Statistics/viz API | Not started | — |
+| API layer | Done | chart + simulation + counting + run history — 11 tests; persistence works |
+| Statistics/viz API | Partial | stats + downsampled bankroll curve returned; dedicated viz endpoints TBD |
 
 ## Architecture
 
@@ -40,6 +40,9 @@ driven directly by the simulation engine and reused across API endpoints.
 - `counting/systems.py` — `CountingSystem` tags (Hi-Lo, KO, Hi-Opt I); `SYSTEMS` registry
 - `counting/counter.py` — running/true count; `counting/shoe.py` — `CountingShoe` auto-counts every deal
 - `counting/betting.py` — `BetRamp` (count -> units); `counting/simulation.py` — `run_counting_simulation`
+- `api/schemas.py` — Pydantic request/response models; `RulesSchema.to_rules()`, `downsample()`
+- `api/routes/strategy.py` — `GET /strategy/chart`; `api/routes/simulation.py` — `POST /simulate[/counting]`, `GET /simulate/runs[/{id}]`
+- `db/models.py` — `SimulationRun` (persists kind, config JSON, statistics JSON)
 
 ## Recent Decisions
 
@@ -57,6 +60,9 @@ driven directly by the simulation engine and reused across API endpoints.
 | `CountingShoe` subclasses `Shoe` to auto-count on `deal()` | Counts all dealt cards with zero engine changes |
 | Counting bet index = true count (balanced) / running count (unbalanced KO) | Matches how each system is actually played |
 | Counting validated via count-conditional edge, not aggregate EV | Bet-weighted variance makes single-seed aggregate EV too noisy to test |
+| Simulations run via `run_in_threadpool` | CPU-bound loops must not block the async event loop |
+| Bankroll curve downsampled (`max_curve_points`) in responses | Keeps payloads small for Plotly; full array stays server-side |
+| Tables created in FastAPI `lifespan` (no Alembic yet) | Simple for SQLite dev; add migrations if the schema grows |
 
 ## Development Commands
 
@@ -72,16 +78,16 @@ Note: full dependency install (NumPy/SciPy/Matplotlib) targets Python 3.12.
 
 ## Next Step
 
-Build the **API layer**: expose the domain through FastAPI endpoints returning
-Plotly-ready JSON for the React frontend —
+Candidates, pick per priority:
 
-- `GET /strategy/chart` → `strategy.build_chart(rules)` (rules via query params)
-- `POST /simulate` → `run_simulation(config)` returning stats + bankroll curve
-- `POST /simulate/counting` → `run_counting_simulation(config)`
+1. **Visualization endpoints**: server-rendered Plotly/Matplotlib figures (e.g.
+   true-count distribution, per-count edge curve, bankroll fan) as JSON/PNG for
+   the frontend — the last unbuilt piece of the original brief.
+2. **CI**: GitHub Actions running pytest + ruff + mypy on push/PR.
+3. **Counting depth**: index-play deviations + insurance (currently
+   bet-variation only).
+4. **Alembic** migrations once the DB schema stabilizes.
 
-Add Pydantic request/response schemas and SQLAlchemy models to persist
-simulation configs/results (DB layer already scaffolded). Long simulations
-should run off the event loop (`run_in_threadpool` / background task).
-
-Possible later enhancement: index-play deviations + insurance in counting
-(currently bet-variation only).
+Note: the full scientific stack (NumPy/SciPy/Matplotlib) targets Python 3.12;
+this machine runs 3.14, so verification used a venv with pytest + numpy + the
+FastAPI stack. Use Python 3.12 (or Docker) for the complete install.

@@ -49,6 +49,21 @@ ruff check . && mypy
 docker compose up --build   # API on http://localhost:8000
 ```
 
+## API endpoints
+
+Interactive docs at `/docs` when the server is running.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/health` | Liveness + version |
+| GET | `/strategy/chart` | Basic strategy chart for a rule set (rules as query params) |
+| POST | `/simulate` | Monte Carlo simulation → stats + downsampled bankroll curve |
+| POST | `/simulate/counting` | Card-counting simulation (system + bet ramp) |
+| GET | `/simulate/runs` | Recent persisted runs |
+| GET | `/simulate/runs/{id}` | A single run summary |
+
+Simulations run off the event loop and are persisted to the DB.
+
 ## Core rules engine
 
 The `core` package models the game independently of the API:
