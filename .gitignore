@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Environment
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Simulation / plot outputs
+outputs/
+*.png
+!docs/**/*.png
+
+# Private notes (per workflow)
+docs/notes/*.open.md

@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/data/blackjack.db
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+    volumes:
+      - ./src:/app/src
+      - blackjack-data:/app/data
+    command: uvicorn blackjack.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  blackjack-data:
