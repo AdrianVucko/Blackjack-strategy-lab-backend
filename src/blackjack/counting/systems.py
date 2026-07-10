@@ -7,9 +7,9 @@ system (e.g. KO) does not, and is played off the running count directly.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Mapping
 
 from blackjack.core.cards import Card
 

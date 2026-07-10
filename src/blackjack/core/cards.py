@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 
 
-class Suit(str, Enum):
+class Suit(StrEnum):
     CLUBS = "C"
     DIAMONDS = "D"
     HEARTS = "H"

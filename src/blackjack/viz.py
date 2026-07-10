@@ -22,7 +22,8 @@ PlotlyFigure = dict[str, Any]
 
 
 def _to_dict(fig: go.Figure) -> PlotlyFigure:
-    return json.loads(fig.to_json())
+    figure: PlotlyFigure = json.loads(fig.to_json())
+    return figure
 
 
 def _downsample_xy(curve: np.ndarray, max_points: int) -> tuple[list[int], list[float]]:

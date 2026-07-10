@@ -1,6 +1,6 @@
 """Card counting: systems, running/true count, bet ramps, and simulation."""
 
-from blackjack.counting.betting import BetRamp, HI_LO_RAMP
+from blackjack.counting.betting import HI_LO_RAMP, BetRamp
 from blackjack.counting.counter import Counter
 from blackjack.counting.shoe import CountingShoe
 from blackjack.counting.simulation import (

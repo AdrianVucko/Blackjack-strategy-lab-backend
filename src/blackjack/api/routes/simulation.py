@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated, Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
@@ -23,8 +25,17 @@ from blackjack.simulation import SimulationConfig, run_simulation
 
 router = APIRouter(prefix="/simulate", tags=["simulation"])
 
+DbSession = Annotated[Session, Depends(get_db)]
 
-def _persist(db: Session, kind: str, config: dict, stats: StatisticsSchema, rounds: int, ruined: bool) -> int:
+
+def _persist(
+    db: Session,
+    kind: str,
+    config: dict[str, Any],
+    stats: StatisticsSchema,
+    rounds: int,
+    ruined: bool,
+) -> int:
     run = SimulationRun(
         kind=kind,
         config=config,
@@ -39,7 +50,7 @@ def _persist(db: Session, kind: str, config: dict, stats: StatisticsSchema, roun
 
 
 @router.post("", response_model=SimulationResponse)
-async def simulate(req: SimulationRequest, db: Session = Depends(get_db)) -> SimulationResponse:
+async def simulate(req: SimulationRequest, db: DbSession) -> SimulationResponse:
     config = SimulationConfig(
         num_rounds=req.num_rounds,
         rules=req.rules.to_rules(),
@@ -61,7 +72,7 @@ async def simulate(req: SimulationRequest, db: Session = Depends(get_db)) -> Sim
 
 
 @router.post("/counting", response_model=CountingResponse)
-async def simulate_counting(req: CountingRequest, db: Session = Depends(get_db)) -> CountingResponse:
+async def simulate_counting(req: CountingRequest, db: DbSession) -> CountingResponse:
     config = CountingConfig(
         num_rounds=req.num_rounds,
         rules=req.rules.to_rules(),
@@ -86,13 +97,13 @@ async def simulate_counting(req: CountingRequest, db: Session = Depends(get_db))
 
 
 @router.get("/runs", response_model=list[RunSummary])
-def list_runs(db: Session = Depends(get_db), limit: int = 20) -> list[RunSummary]:
+def list_runs(db: DbSession, limit: int = 20) -> list[RunSummary]:
     stmt = select(SimulationRun).order_by(SimulationRun.id.desc()).limit(limit)
     return [_to_summary(run) for run in db.scalars(stmt)]
 
 
 @router.get("/runs/{run_id}", response_model=RunSummary)
-def get_run(run_id: int, db: Session = Depends(get_db)) -> RunSummary:
+def get_run(run_id: int, db: DbSession) -> RunSummary:
     run = db.get(SimulationRun, run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="run not found")

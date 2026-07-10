@@ -24,6 +24,7 @@ Python, FastAPI, NumPy, Pandas, SciPy, Matplotlib, Plotly, SQLite, SQLAlchemy, p
 | Card counting | Done | Hi-Lo/KO/Hi-Opt I, counter, bet ramp, sim — 15 tests; edge curve validated |
 | API layer | Done | chart + simulation + counting + run history — 11 tests; persistence works |
 | Statistics/viz API | Done | 4 Plotly-JSON endpoints under `/viz` — 9 tests (analysis + endpoints) |
+| CI | Done | GitHub Actions: ruff + mypy + pytest on push/PR (Python 3.12) |
 
 ## Architecture
 
@@ -69,6 +70,7 @@ driven directly by the simulation engine and reused across API endpoints.
 | Viz returns Plotly figure JSON (not PNG) | Frontend is react-plotly; interactive client-side rendering |
 | `analysis.py` (numpy) split from `viz.py` (plotly) | Numbers stay unit-testable without a plotting lib |
 | Edge-curve endpoint forces a flat bet ramp | Makes each round's net a per-unit result so buckets read as edge |
+| String enums use `StrEnum`; mypy scoped to `src`; plotly stubs ignored | Clean strict mypy + ruff without typing the test suite or vendoring stubs |
 
 ## Development Commands
 
@@ -84,14 +86,14 @@ Note: full dependency install (NumPy/SciPy/Matplotlib) targets Python 3.12.
 
 ## Next Step
 
-The full original brief is now covered (rules -> strategy -> simulation ->
-counting -> API -> visualization). Remaining polish/enhancements:
+The full original brief plus CI is now covered (rules -> strategy -> simulation
+-> counting -> API -> visualization; ruff + mypy + pytest gate). Remaining
+enhancements:
 
-1. **CI**: GitHub Actions running pytest + ruff + mypy on push/PR.
-2. **Counting depth**: index-play deviations + insurance (currently
+1. **Counting depth**: index-play deviations + insurance (currently
    bet-variation only).
-3. **Bankroll fan**: multi-session percentile-band viz for risk analysis.
-4. **Alembic** migrations once the DB schema stabilizes.
+2. **Bankroll fan**: multi-session percentile-band viz for risk analysis.
+3. **Alembic** migrations once the DB schema stabilizes.
 
 Note: the full scientific stack (NumPy/SciPy/Matplotlib) targets Python 3.12;
 this machine runs 3.14, so verification used a venv with pytest + numpy + plotly

@@ -159,7 +159,10 @@ def decide(
         if row is None:
             return Action.STAND
         return _resolve(
-            row[col], can_double=can_double, can_surrender=can_surrender, das=rules.double_after_split
+            row[col],
+            can_double=can_double,
+            can_surrender=can_surrender,
+            das=rules.double_after_split,
         )
 
     if total <= 7:
@@ -201,7 +204,11 @@ def build_chart(rules: Rules) -> dict[str, dict[str, dict[str, str]]]:
 
     return {
         "hard": {str(total): render(row) for total, row in sorted(hard.items())},
-        "soft": {f"A,{total - 11}": render(row) for total, row in sorted(soft.items()) if total > 12},
+        "soft": {
+            f"A,{total - 11}": render(row)
+            for total, row in sorted(soft.items())
+            if total > 12
+        },
         "pairs": {_PAIR_LABELS[points]: render(row) for points, row in sorted(pairs.items())},
     }
 

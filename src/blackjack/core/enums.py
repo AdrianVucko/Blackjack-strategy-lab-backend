@@ -1,9 +1,9 @@
 """Enumerations shared across the core domain."""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class Action(str, Enum):
+class Action(StrEnum):
     """A decision a player can make on a hand."""
 
     HIT = "hit"
@@ -13,7 +13,7 @@ class Action(str, Enum):
     SURRENDER = "surrender"
 
 
-class Outcome(str, Enum):
+class Outcome(StrEnum):
     """The result of a settled hand from the player's perspective."""
 
     WIN = "win"
