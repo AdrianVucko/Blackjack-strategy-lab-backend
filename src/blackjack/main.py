@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from blackjack import __version__
-from blackjack.api.routes import health, simulation, strategy
+from blackjack.api.routes import health, simulation, strategy, viz
 from blackjack.config import settings
 from blackjack.db import models  # noqa: F401  (register models before create_all)
 from blackjack.db.database import Base, engine
@@ -35,6 +35,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(strategy.router)
     app.include_router(simulation.router)
+    app.include_router(viz.router)
     return app
 
 

@@ -61,6 +61,10 @@ Interactive docs at `/docs` when the server is running.
 | POST | `/simulate/counting` | Card-counting simulation (system + bet ramp) |
 | GET | `/simulate/runs` | Recent persisted runs |
 | GET | `/simulate/runs/{id}` | A single run summary |
+| POST | `/viz/bankroll` | Bankroll curve as a Plotly figure |
+| POST | `/viz/result-distribution` | Per-round result histogram (Plotly) |
+| POST | `/viz/counting/edge-curve` | Player edge by true count (Plotly) |
+| POST | `/viz/counting/true-count-distribution` | True-count histogram (Plotly) |
 
 Simulations run off the event loop and are persisted to the DB.
 
