@@ -13,18 +13,18 @@ Python, FastAPI, NumPy, Pandas, SciPy, Matplotlib, Plotly, SQLite, SQLAlchemy, p
 
 ## Current Status
 
+Backend is **feature-complete**: the full brief (rules → strategy → simulation →
+counting → API → visualization) plus CI is shipped and on `origin/master`
+(commit `a715e43`). 107 tests; ruff + mypy (strict) clean. Frontend API contract
+lives at `docs/frontend-handoff.md`.
+
+Open / backlog (optional enhancements — none in progress):
+
 | Area | Status | Notes |
 |------|--------|-------|
-| Project scaffold | Done | src layout, pyproject, Docker, pytest config |
-| Core rules engine | Done | cards, hand, rules — 39 tests passing |
-| FastAPI app | Done | `create_app`, CORS, `/health` |
-| DB layer | Skeleton | engine/session/Base ready; no models yet |
-| Basic strategy | Done | 4-8 deck tables, `decide()` + `build_chart()` — 19 tests |
-| Monte Carlo | Done | round engine + simulator + stats — 14 tests; edge/std validated |
-| Card counting | Done | Hi-Lo/KO/Hi-Opt I, counter, bet ramp, sim — 15 tests; edge curve validated |
-| API layer | Done | chart + simulation + counting + run history — 11 tests; persistence works |
-| Statistics/viz API | Done | 4 Plotly-JSON endpoints under `/viz` — 9 tests (analysis + endpoints) |
-| CI | Done | GitHub Actions: ruff + mypy + pytest on push/PR (Python 3.12) |
+| Counting depth | Backlog | index-play deviations + insurance (currently bet-variation only) |
+| Bankroll fan | Backlog | multi-session percentile-band viz for risk analysis |
+| Alembic migrations | Backlog | once the DB schema stabilizes |
 
 ## Architecture
 
@@ -54,7 +54,6 @@ driven directly by the simulation engine and reused across API endpoints.
 |----------|-----|
 | `Rank.points` instead of `.value` | `value` is a reserved attribute on Python `Enum` |
 | Seedable `Shoe(rng=random.Random(seed))` | Reproducible Monte Carlo runs |
-| `resolve` returns net units of base bet | Cleanly handles double (wager=2) and surrender (-0.5) |
 | `core` has no framework deps | Reusable by simulation engine and API alike |
 | src layout + `pythonpath=["src"]` | Avoids import ambiguity; clean packaging |
 | Basic strategy as S17 code tables + H17 patch | One source of truth; rule variants derived, not duplicated |
@@ -86,14 +85,11 @@ Note: full dependency install (NumPy/SciPy/Matplotlib) targets Python 3.12.
 
 ## Next Step
 
-The full original brief plus CI is now covered (rules -> strategy -> simulation
--> counting -> API -> visualization; ruff + mypy + pytest gate). Remaining
-enhancements:
-
-1. **Counting depth**: index-play deviations + insurance (currently
-   bet-variation only).
-2. **Bankroll fan**: multi-session percentile-band viz for risk analysis.
-3. **Alembic** migrations once the DB schema stabilizes.
+Backend work is done and pushed; the frontend is being built in a separate repo
+using `docs/frontend-handoff.md` as the API contract. If returning to the
+backend, pick a backlog item above — **counting depth (index-play deviations +
+insurance)** is the highest-value next step; it extends the pluggable `policy`
+and touches `strategy/basic_strategy.py` + `counting/simulation.py`.
 
 Note: the full scientific stack (NumPy/SciPy/Matplotlib) targets Python 3.12;
 this machine runs 3.14, so verification used a venv with pytest + numpy + plotly
