@@ -21,7 +21,8 @@ Python, FastAPI, NumPy, Pandas, SciPy, Matplotlib, Plotly, SQLite, SQLAlchemy, p
 | DB layer | Skeleton | engine/session/Base ready; no models yet |
 | Basic strategy | Done | 4-8 deck tables, `decide()` + `build_chart()` — 19 tests |
 | Monte Carlo | Done | round engine + simulator + stats — 14 tests; edge/std validated |
-| Card counting | Not started | — |
+| Card counting | Done | Hi-Lo/KO/Hi-Opt I, counter, bet ramp, sim — 15 tests; edge curve validated |
+| API layer | Not started | routes for chart + simulation; SQLAlchemy models |
 | Statistics/viz API | Not started | — |
 
 ## Architecture
@@ -36,6 +37,9 @@ driven directly by the simulation engine and reused across API endpoints.
 - `simulation/engine.py` — `play_round(shoe, rules, policy)`: full round incl. peek, split, double, surrender
 - `simulation/simulator.py` — `run_simulation(config)`: seeded loop, bankroll/ruin tracking
 - `simulation/statistics.py` — EV, house edge, variance, std dev, 95% CI, risk of ruin (diffusion approx)
+- `counting/systems.py` — `CountingSystem` tags (Hi-Lo, KO, Hi-Opt I); `SYSTEMS` registry
+- `counting/counter.py` — running/true count; `counting/shoe.py` — `CountingShoe` auto-counts every deal
+- `counting/betting.py` — `BetRamp` (count -> units); `counting/simulation.py` — `run_counting_simulation`
 
 ## Recent Decisions
 
@@ -50,6 +54,9 @@ driven directly by the simulation engine and reused across API endpoints.
 | Simulation returns net in base-bet units; simulator scales by `bet` | Keeps engine bet-agnostic; bankroll math lives in one place |
 | Risk of ruin via diffusion approx `exp(-2·b·μ/σ²)` | Closed-form, no extra trials; returns 1.0 when player has no edge |
 | Pluggable `policy` on `play_round`/`run_simulation` | Lets counting inject bet/deviation logic later without engine changes |
+| `CountingShoe` subclasses `Shoe` to auto-count on `deal()` | Counts all dealt cards with zero engine changes |
+| Counting bet index = true count (balanced) / running count (unbalanced KO) | Matches how each system is actually played |
+| Counting validated via count-conditional edge, not aggregate EV | Bet-weighted variance makes single-seed aggregate EV too noisy to test |
 
 ## Development Commands
 
@@ -65,11 +72,16 @@ Note: full dependency install (NumPy/SciPy/Matplotlib) targets Python 3.12.
 
 ## Next Step
 
-Two candidates, pick per priority:
+Build the **API layer**: expose the domain through FastAPI endpoints returning
+Plotly-ready JSON for the React frontend —
 
-1. **Card counting** (`counting/`): Hi-Lo running/true count from the `Shoe`, and a
-   count-based betting/deviation policy plugged into `run_simulation` via the
-   existing `policy` hook — to quantify the counter's edge vs. flat betting.
-2. **API layer**: expose `strategy.build_chart` and `run_simulation` through
-   FastAPI endpoints returning Plotly-ready JSON, plus SQLAlchemy models to
-   persist simulation configs/results (DB layer already scaffolded).
+- `GET /strategy/chart` → `strategy.build_chart(rules)` (rules via query params)
+- `POST /simulate` → `run_simulation(config)` returning stats + bankroll curve
+- `POST /simulate/counting` → `run_counting_simulation(config)`
+
+Add Pydantic request/response schemas and SQLAlchemy models to persist
+simulation configs/results (DB layer already scaffolded). Long simulations
+should run off the event loop (`run_in_threadpool` / background task).
+
+Possible later enhancement: index-play deviations + insurance in counting
+(currently bet-variation only).
