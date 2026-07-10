@@ -103,6 +103,14 @@ class Shoe:
         self._rng.shuffle(self._cards)
         self._dealt = 0
 
+    def set_cards(self, cards: list[Card]) -> None:
+        """Replace the remaining cards with a fixed sequence (dealt front-first).
+
+        Useful for deterministic tests and scripted teaching scenarios.
+        """
+        self._cards = list(cards)
+        self._dealt = 0
+
     def needs_shuffle(self) -> bool:
         """True once the dealt fraction has passed the penetration cut card."""
         return self._dealt >= self.penetration * self.total_cards

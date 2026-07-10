@@ -20,7 +20,7 @@ Python, FastAPI, NumPy, Pandas, SciPy, Matplotlib, Plotly, SQLite, SQLAlchemy, p
 | FastAPI app | Done | `create_app`, CORS, `/health` |
 | DB layer | Skeleton | engine/session/Base ready; no models yet |
 | Basic strategy | Done | 4-8 deck tables, `decide()` + `build_chart()` — 19 tests |
-| Monte Carlo | Not started | `simulation/` placeholder |
+| Monte Carlo | Done | round engine + simulator + stats — 14 tests; edge/std validated |
 | Card counting | Not started | — |
 | Statistics/viz API | Not started | — |
 
@@ -33,6 +33,9 @@ driven directly by the simulation engine and reused across API endpoints.
 - `core/hand.py` — `Hand` value logic (soft/hard aces, blackjack, bust, pair)
 - `core/rules.py` — `Rules` config, `play_dealer`, `resolve` (settlement)
 - `strategy/basic_strategy.py` — code-table basic strategy; `decide(hand, upcard, rules)` and `build_chart(rules)`
+- `simulation/engine.py` — `play_round(shoe, rules, policy)`: full round incl. peek, split, double, surrender
+- `simulation/simulator.py` — `run_simulation(config)`: seeded loop, bankroll/ruin tracking
+- `simulation/statistics.py` — EV, house edge, variance, std dev, 95% CI, risk of ruin (diffusion approx)
 
 ## Recent Decisions
 
@@ -44,6 +47,9 @@ driven directly by the simulation engine and reused across API endpoints.
 | `core` has no framework deps | Reusable by simulation engine and API alike |
 | src layout + `pythonpath=["src"]` | Avoids import ambiguity; clean packaging |
 | Basic strategy as S17 code tables + H17 patch | One source of truth; rule variants derived, not duplicated |
+| Simulation returns net in base-bet units; simulator scales by `bet` | Keeps engine bet-agnostic; bankroll math lives in one place |
+| Risk of ruin via diffusion approx `exp(-2·b·μ/σ²)` | Closed-form, no extra trials; returns 1.0 when player has no edge |
+| Pluggable `policy` on `play_round`/`run_simulation` | Lets counting inject bet/deviation logic later without engine changes |
 
 ## Development Commands
 
@@ -59,7 +65,11 @@ Note: full dependency install (NumPy/SciPy/Matplotlib) targets Python 3.12.
 
 ## Next Step
 
-Build the **Monte Carlo simulation engine** (`simulation/`): a round loop that
-plays full hands using `strategy.decide` + the seedable `Shoe`, run over many
-hands with NumPy/Pandas, producing EV, variance, standard deviation, and risk of
-ruin (SciPy). The strategy module now provides the player policy this needs.
+Two candidates, pick per priority:
+
+1. **Card counting** (`counting/`): Hi-Lo running/true count from the `Shoe`, and a
+   count-based betting/deviation policy plugged into `run_simulation` via the
+   existing `policy` hook — to quantify the counter's edge vs. flat betting.
+2. **API layer**: expose `strategy.build_chart` and `run_simulation` through
+   FastAPI endpoints returning Plotly-ready JSON, plus SQLAlchemy models to
+   persist simulation configs/results (DB layer already scaffolded).
