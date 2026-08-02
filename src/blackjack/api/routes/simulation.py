@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -22,10 +23,19 @@ from blackjack.counting import CountingConfig, run_counting_simulation
 from blackjack.db.database import get_db
 from blackjack.db.models import SimulationRun
 from blackjack.simulation import SimulationConfig, run_simulation
+from blackjack.simulation.engine import Policy
+from blackjack.strategy import RandomPolicy, decide
 
 router = APIRouter(prefix="/simulate", tags=["simulation"])
 
 DbSession = Annotated[Session, Depends(get_db)]
+
+
+def _build_policy(strategy: str, seed: int | None) -> Policy:
+    if strategy == "random":
+        # Offset the seed so decisions don't replay the shoe's RNG stream.
+        return RandomPolicy(random.Random(None if seed is None else seed + 1))
+    return decide
 
 
 def _persist(
@@ -58,12 +68,15 @@ async def simulate(req: SimulationRequest, db: DbSession) -> SimulationResponse:
         starting_bankroll=req.starting_bankroll,
         seed=req.seed,
     )
-    result = await run_in_threadpool(run_simulation, config)
+    policy = _build_policy(req.strategy, req.seed)
+    result = await run_in_threadpool(run_simulation, config, policy=policy)
     stats = StatisticsSchema.from_stats(result.statistics)
-    run_id = _persist(db, "basic", req.model_dump(), stats, result.rounds_played, result.ruined)
+    run_id = _persist(
+        db, req.strategy, req.model_dump(), stats, result.rounds_played, result.ruined
+    )
     return SimulationResponse(
         run_id=run_id,
-        kind="basic",
+        kind=req.strategy,
         rounds_played=result.rounds_played,
         ruined=result.ruined,
         statistics=stats,

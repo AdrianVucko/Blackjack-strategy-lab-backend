@@ -84,6 +84,7 @@ penetration: float (0..1] = 0.75            # fraction of shoe dealt before resh
 ```
 num_rounds: int (1..5_000_000)              # REQUIRED
 rules: Rules = {defaults above}
+strategy: "basic" | "random" = "basic"      # "random" = uniform-random legal action (baseline)
 bet: float (>0) = 1.0
 starting_bankroll: float (>0) | null = null # set to enable ruin + risk_of_ruin
 seed: int | null = null                     # set for reproducible results
@@ -92,6 +93,7 @@ max_curve_points: int (2..5000) = 500       # bankroll_curve is downsampled to t
 
 ### CountingRequest  (extends SimulationRequest with)
 ```
+strategy: "basic"                            # fixed; counting always plays basic strategy
 system: "Hi-Lo" | "KO" | "Hi-Opt I" = "Hi-Lo"
 base_bet: float (>0) = 1.0                   # money value of one betting unit
 ramp_tiers: [ [count, units], ... ] | null = null
@@ -119,7 +121,7 @@ risk_of_ruin: float | null   # null unless starting_bankroll was provided (0..1)
 ### SimulationResponse
 ```
 run_id: int
-kind: "basic"
+kind: "basic" | "random"     # echoes the requested strategy
 rounds_played: int           # < num_rounds if the bankroll was ruined early
 ruined: bool
 statistics: Statistics
@@ -155,7 +157,7 @@ chart: {
 ```
 id: int
 created_at: string (ISO 8601)
-kind: "basic" | "counting"
+kind: "basic" | "random" | "counting"
 rounds_played: int
 ruined: bool
 house_edge_pct: float
@@ -250,6 +252,7 @@ export interface Rules {
 export interface SimulationRequest {
   num_rounds: number;
   rules?: Partial<Rules>;
+  strategy?: "basic" | "random";
   bet?: number;
   starting_bankroll?: number | null;
   seed?: number | null;
@@ -257,6 +260,7 @@ export interface SimulationRequest {
 }
 
 export interface CountingRequest extends SimulationRequest {
+  strategy?: "basic"; // counting always plays basic strategy
   system?: CountingSystem;
   base_bet?: number;
   ramp_tiers?: [number, number][] | null;
@@ -276,7 +280,7 @@ export interface Statistics {
 
 export interface SimulationResponse {
   run_id: number;
-  kind: "basic" | "counting";
+  kind: "basic" | "random" | "counting";
   rounds_played: number;
   ruined: boolean;
   statistics: Statistics;
@@ -301,7 +305,7 @@ export interface StrategyChartResponse {
 export interface RunSummary {
   id: number;
   created_at: string;
-  kind: "basic" | "counting";
+  kind: "basic" | "random" | "counting";
   rounds_played: number;
   ruined: boolean;
   house_edge_pct: number;

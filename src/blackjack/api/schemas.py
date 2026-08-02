@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
 
@@ -57,6 +59,7 @@ class StatisticsSchema(BaseModel):
 class SimulationRequest(BaseModel):
     num_rounds: int = Field(ge=1, le=_MAX_ROUNDS)
     rules: RulesSchema = Field(default_factory=RulesSchema)
+    strategy: Literal["basic", "random"] = "basic"
     bet: float = Field(default=1.0, gt=0)
     starting_bankroll: float | None = Field(default=None, gt=0)
     seed: int | None = None
@@ -64,6 +67,7 @@ class SimulationRequest(BaseModel):
 
 
 class CountingRequest(SimulationRequest):
+    strategy: Literal["basic"] = "basic"  # counting always plays basic strategy
     system: str = "Hi-Lo"
     base_bet: float = Field(default=1.0, gt=0)
     ramp_tiers: list[tuple[float, float]] | None = None

@@ -16,7 +16,9 @@ Python, FastAPI, NumPy, Pandas, SciPy, Matplotlib, Plotly, SQLite, SQLAlchemy, p
 Backend is **feature-complete**: the full brief (rules → strategy → simulation →
 counting → API → visualization) plus CI is shipped and on `origin/master`
 (commit `a715e43`). 107 tests; ruff + mypy (strict) clean. Frontend API contract
-lives at `docs/frontend-handoff.md`.
+lives at `docs/frontend-handoff.md`. Added since: uniform-random baseline policy
+(`strategy/random_policy.py`, selectable via `strategy: "basic" | "random"` on
+`POST /simulate`) as the worst-case reference for the thesis experiments. 118 tests.
 
 Open / backlog (optional enhancements — none in progress):
 
@@ -35,6 +37,7 @@ driven directly by the simulation engine and reused across API endpoints.
 - `core/hand.py` — `Hand` value logic (soft/hard aces, blackjack, bust, pair)
 - `core/rules.py` — `Rules` config, `play_dealer`, `resolve` (settlement)
 - `strategy/basic_strategy.py` — code-table basic strategy; `decide(hand, upcard, rules)` and `build_chart(rules)`
+- `strategy/random_policy.py` — `RandomPolicy`: uniform-random legal action (baseline strategy)
 - `simulation/engine.py` — `play_round(shoe, rules, policy)`: full round incl. peek, split, double, surrender
 - `simulation/simulator.py` — `run_simulation(config)`: seeded loop, bankroll/ruin tracking
 - `simulation/statistics.py` — EV, house edge, variance, std dev, 95% CI, risk of ruin (diffusion approx)
@@ -70,6 +73,8 @@ driven directly by the simulation engine and reused across API endpoints.
 | `analysis.py` (numpy) split from `viz.py` (plotly) | Numbers stay unit-testable without a plotting lib |
 | Edge-curve endpoint forces a flat bet ramp | Makes each round's net a per-unit result so buckets read as edge |
 | String enums use `StrEnum`; mypy scoped to `src`; plotly stubs ignored | Clean strict mypy + ruff without typing the test suite or vendoring stubs |
+| Random policy seeded with `seed + 1`, not `seed` | Same seed as the shoe would replay the identical RNG stream and correlate decisions with shuffles |
+| `/simulate` persists `kind` = requested strategy (`basic`/`random`) | Run history distinguishes baseline vs basic-strategy runs; additive for the frontend |
 
 ## Development Commands
 

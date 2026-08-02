@@ -1,5 +1,6 @@
-"""Basic strategy tables and optimal-play lookup."""
+"""Basic strategy tables, optimal-play lookup, and baseline policies."""
 
 from blackjack.strategy.basic_strategy import build_chart, decide
+from blackjack.strategy.random_policy import RandomPolicy
 
-__all__ = ["decide", "build_chart"]
+__all__ = ["RandomPolicy", "build_chart", "decide"]

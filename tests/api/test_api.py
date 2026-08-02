@@ -55,6 +55,29 @@ def test_simulate_reproducible_via_seed(client) -> None:
     assert first["statistics"]["total_result"] == second["statistics"]["total_result"]
 
 
+def test_simulate_random_strategy(client) -> None:
+    resp = client.post(
+        "/simulate", json={"num_rounds": 3000, "seed": 1, "strategy": "random"}
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["kind"] == "random"
+    basic = client.post("/simulate", json={"num_rounds": 3000, "seed": 1}).json()
+    assert body["statistics"]["ev_per_round"] < basic["statistics"]["ev_per_round"]
+
+
+def test_simulate_rejects_unknown_strategy(client) -> None:
+    resp = client.post("/simulate", json={"num_rounds": 100, "strategy": "nope"})
+    assert resp.status_code == 422
+
+
+def test_counting_rejects_random_strategy(client) -> None:
+    resp = client.post(
+        "/simulate/counting", json={"num_rounds": 100, "strategy": "random"}
+    )
+    assert resp.status_code == 422
+
+
 def test_simulate_counting(client) -> None:
     resp = client.post(
         "/simulate/counting",
