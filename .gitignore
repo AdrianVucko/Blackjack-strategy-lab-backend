@@ -38,3 +38,6 @@ outputs/
 
 # Private notes (per workflow)
 docs/notes/*.open.md
+
+# Project memory - kept local only
+CLAUDE.md
